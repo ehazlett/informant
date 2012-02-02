@@ -1,0 +1,41 @@
+<html>
+<head>
+  <title>Informant</title>
+  <link href="/static/bootstrap-responsive.min.css" rel="stylesheet">
+  <link href="/static/style.css" rel="stylesheet">
+</head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="events"></div>
+      </div>
+    </div>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io.connect();
+    socket.on('events', function (obj) {
+      console.log(obj);
+      var item = '<div>';
+      // check for github
+      if ('payload' in obj){
+        var p = JSON.parse(obj.payload);
+        console.log(p);
+        item += '<dt>Project: ' + p.repository.name + '</dt>';
+        item += '<dd>' + p.ref + '</dd>';
+        item += '<dd><a href="' + p.repository.url + '" target="_github">' + p.repository.url + '</a></dd>';
+        if (p.hasOwnProperty('pusher')){
+          item += '<dd>Author: ' + p.pusher.name + '</dd>';
+        }
+      } else {
+        for (var key in obj) {
+          item += key + ': ' + obj[key];
+          item += '</div>';
+        }
+      }
+      $(item).appendTo("#events");
+      //socket.emit('', { my: 'data' });
+    });
+  </script>
+</html>
