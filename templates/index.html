@@ -51,7 +51,7 @@
       // check for github
       if ('payload' in obj){ // ignore non-github messages for now
         var p = JSON.parse(obj.payload);
-        createEvent(p.repository.name, p.ref + ' : ' + p.after + ' by ' + p.pusher.name, p.commits.message);
+        createEvent(p.repository.name, p.ref + ' : ' + p.after + ' by ' + p.pusher.name, p.commits[0].message);
       }
     });
     $(function(){
