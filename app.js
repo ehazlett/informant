@@ -25,7 +25,7 @@ function route(req, parts, res){
     case '/':
       filename = 'templates/index.html';
       break;
-    // TODO: make static file search dynamic
+    // TODO: make static file lookup dynamic
     case '/static/glyphicons-halflings.png':
       filename = 'static/glyphicons-halflings.png';
       break;
