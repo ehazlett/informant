@@ -1,5 +1,5 @@
 body {
-  background-color: #dedede;
+  background-color: #eeeeee;
 }
 div.content {
   overflow: auto;
@@ -8,7 +8,8 @@ div.content {
   margin-left: 0px;
 }
 div.welcome {
-  margin-top: 60px;
+  margin-top: 30px;
+  min-height: 50px;
 }
 .info {
   font-size: 24pt;
@@ -16,15 +17,22 @@ div.welcome {
   text-align: center;
 }
 div.event {
-  border: 1px solid #a1a1a1;
-  background-color: #f1f1f1;
+  border: 1px solid #b1b1b1;
+  background-color: #ededed;
+  border-radius: 5px;
   background-image: -moz-linear-gradient(top, #f1f1f1, #fefefe);
   background-image: -ms-linear-gradient(top, #f1f1f1, #fefefe);
-  background-image: -o-linear-gradient(top, #f1f1f1, #fefefe);
-  background-image: -webkit-linear-gradient(top, #f1f1f1, #fefefe);
+  background-image: -o-linear-gradient(top, #fefefe, #f5f5f5);
+  background-image: -webkit-linear-gradient(top, #ededed, #fdfdfd);
   background-repeat: repeat-x;
   padding: 10px 20px 20px 20px;
-  margin-bottom: 20px;
+  margin: 0px 10px 20px 0px;
+}
+div.event.shadow {
+  position: relative;
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.15);
+  -webkit-box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.15);
 }
 footer {
   text-align: center;

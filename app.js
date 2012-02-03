@@ -26,6 +26,9 @@ function route(req, parts, res){
       filename = 'templates/index.html';
       break;
     // TODO: make static file lookup dynamic
+    case '/static/favicon.ico':
+      filename = 'static/favicon.ico';
+      break;
     case '/static/glyphicons-halflings.png':
       filename = 'static/glyphicons-halflings.png';
       break;
