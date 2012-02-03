@@ -1,5 +1,44 @@
-#events div {
-  border: 1px solid #dedede;
-  padding: 5px;
+body {
+  background-color: #dedede;
+}
+div.content {
+  overflow: auto;
+}
+.row {
+  margin-left: 0px;
+}
+div.welcome {
+  margin-top: 60px;
+}
+.info {
+  font-size: 24pt;
+  color: #b5b5b5;
+  text-align: center;
+}
+div.event {
+  border: 1px solid #a1a1a1;
+  background-color: #f1f1f1;
+  background-image: -moz-linear-gradient(top, #f1f1f1, #fefefe);
+  background-image: -ms-linear-gradient(top, #f1f1f1, #fefefe);
+  background-image: -o-linear-gradient(top, #f1f1f1, #fefefe);
+  background-image: -webkit-linear-gradient(top, #f1f1f1, #fefefe);
+  background-repeat: repeat-x;
+  padding: 10px 20px 20px 20px;
   margin-bottom: 20px;
+}
+footer {
+  text-align: center;
+}
+
+@media (min-width: 980px) {
+  div.content {
+    margin-top: 45px;
+    min-height: 350px;
+  }
+}
+@media (min-width: 1200px) {  
+  div.content {
+    margin-top: 45px;
+    min-height: 350px;
+  }
 }

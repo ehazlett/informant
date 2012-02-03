@@ -21,13 +21,25 @@ function handler (req, res) {
 
 function route(req, parts, res){
   var filename = null;
-  console.log(parts.path);
   switch(parts.path) {
     case '/':
       filename = 'templates/index.html';
       break;
+    // TODO: make static file search dynamic
+    case '/static/glyphicons-halflings.png':
+      filename = 'static/glyphicons-halflings.png';
+      break;
+    case '/static/glyphicons-halflings-white.png':
+      filename = 'static/glyphicons-halflings-white.png';
+      break;
     case '/static/style.css':
       filename = 'static/style.css';
+      break;
+    case '/static/common.js':
+      filename = 'static/common.js';
+      break;
+    case '/static/bootstrap.min.css':
+      filename = 'static/bootstrap.min.css';
       break;
     case '/static/bootstrap-responsive.min.css':
       filename = 'static/bootstrap-responsive.min.css';
