@@ -6,5 +6,7 @@ Setup
 ------
 * Install Node.js
 * Clone Informant
-* npm install socket.io
-* Configure a Github Post-Receive hook (http://help.github.com/post-receive-hooks/) to http://<url>/receive
+* `npm install socket.io`
+* Configure a Github Post-Receive hook (http://help.github.com/post-receive-hooks/) to `http://<url>/receive`
+
+
