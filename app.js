@@ -64,7 +64,7 @@ function handler (req, res) {
 
 function route(req, parts, res){
   var filename = null;
-  switch(parts.path) {
+  switch(parts.pathname) {
     case '/':
       filename = 'templates/index.html';
       break;
@@ -103,25 +103,56 @@ function route(req, parts, res){
       res.writeHead(200);
       return res.end('received');
       break;
-    case '/addrepo':
-      var url = 'https://github.com/login/oauth/authorize?client_id='+CONFIG.githubClientId;
-      console.log(url);
+    case '/oauth/grant':
+      var url = 'https://github.com/login/oauth/authorize?client_id='+CONFIG.githubClientId+'&scope=repo';
       res.writeHead(302, {
         'Location': url
       });
       res.end();
       break;
     case '/authorize':
-      if (req.method == 'POST') {
-        var postData = ''; 
-        req.addListener('data', function(chunk){
-          postData += chunk.toString();
-        }).addListener('end', function() {
-          console.log(postData);
+      var postData = ''; 
+      req.addListener('data', function(chunk){
+        postData += chunk.toString();
+      }).addListener('end', function(data) {
+        var post = qs.stringify({
+          'client_id': CONFIG.githubClientId,
+          'client_secret': CONFIG.githubSecret,
+          'code': parts.query.code,
         });
-      }   
-      res.writeHead(200);
-      return res.end('received');
+        var req = https.request({
+          host: 'github.com',
+          port: 443,
+          path: '/login/oauth/access_token',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': post.length
+          }
+        }, function(res){
+          res.on('data', function(res){
+            var token = qs.parse(res.toString()).access_token;
+            var req = https.request({
+              host: 'api.github.com',
+              port: 443,
+              path: '/user',
+              headers: {
+                'Authorization': 'token ' + token
+              }
+            }, function(res){
+              res.on('data', function(data){
+                var userData = JSON.parse(data.toString());
+                console.log('Auth token for ' + userData.login + ': ' + token);
+              });
+            });
+            req.end();
+          })
+        });
+        req.end(post);
+      });
+      res.writeHead(302, {
+        'Location': '/'
+      });
+      return res.end();
       break;
     default:
       res.writeHead(404);
