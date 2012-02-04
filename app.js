@@ -2,6 +2,8 @@ var http = require('http');
 var https = require('https');
 var url = require('url');
 var qs = require('querystring');
+var rds = require('redis');
+var redis = rds.createClient();
 var APP_PORT = 3000;
 
 var app = require('http').createServer(handler)
@@ -84,6 +86,18 @@ function route(req, parts, res){
     case '/static/common.js':
       filename = 'static/common.js';
       break;
+    case '/static/bootstrap-modal.js':
+      filename = 'static/bootstrap-modal.js';
+      break;
+    case '/static/bootstrap-dropdown.js':
+      filename = 'static/bootstrap-dropdown.js';
+      break;
+    case '/static/bootstrap-tooltip.js':
+      filename = 'static/bootstrap-tooltip.js';
+      break;
+    case '/static/bootstrap-popover.js':
+      filename = 'static/bootstrap-popover.js';
+      break;
     case '/static/bootstrap.min.css':
       filename = 'static/bootstrap.min.css';
       break;
@@ -142,6 +156,12 @@ function route(req, parts, res){
               res.on('data', function(data){
                 var userData = JSON.parse(data.toString());
                 console.log('Auth token for ' + userData.login + ': ' + token);
+                // store in redis
+                redis.set('user:'+userData.login+':token', token, function(err, res){
+                  if (err){
+                    console.log(err);
+                  }
+                });
               });
             });
             req.end();
