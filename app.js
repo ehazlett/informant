@@ -86,6 +86,9 @@ function route(req, parts, res){
     case '/static/common.js':
       filename = 'static/common.js';
       break;
+    case '/static/bootstrap-alert.js':
+      filename = 'static/bootstrap-alert.js';
+      break;
     case '/static/bootstrap-modal.js':
       filename = 'static/bootstrap-modal.js';
       break;
@@ -117,14 +120,14 @@ function route(req, parts, res){
       res.writeHead(200);
       return res.end('received');
       break;
-    case '/oauth/grant':
+    case '/oauth/grant': // starting point for github oauth -- redirects to github for login and authorization
       var url = 'https://github.com/login/oauth/authorize?client_id='+CONFIG.githubClientId+'&scope=repo';
       res.writeHead(302, {
         'Location': url
       });
       res.end();
       break;
-    case '/authorize':
+    case '/authorize': // github responds with a code to this url which then is posted to github for the user auth token
       var postData = ''; 
       req.addListener('data', function(chunk){
         postData += chunk.toString();
@@ -157,7 +160,7 @@ function route(req, parts, res){
                 var userData = JSON.parse(data.toString());
                 console.log('Auth token for ' + userData.login + ': ' + token);
                 // store in redis
-                redis.set('user:'+userData.login+':token', token, function(err, res){
+                redis.set('users:'+userData.login+':token', token, function(err, res){
                   if (err){
                     console.log(err);
                   }
@@ -174,20 +177,49 @@ function route(req, parts, res){
       });
       return res.end();
       break;
+    case '/addrepo':
+      if (req.method == 'POST') {
+        var postData = ''; 
+        req.addListener('data', function(chunk){
+          postData += chunk.toString();
+        }).addListener('end', function() {
+          var post = qs.parse(postData);
+          console.log(post);
+          // add repo to datastore
+          redis.set('repos:'+post.repo_name, JSON.stringify(post));
+          res.writeHead(200);
+        });
+      }   
+      return res.end(JSON.stringify({'status': 'success'}));
+      break;
+    case '/users/list':
+      res.writeHead(200);
+      var keys;
+      var users = new Array();
+      redis.keys('users:*', function(err, r){
+        for (var k in r){
+          users.push(r[k].split(':')[1]);
+        }
+        return res.end(JSON.stringify(users));
+      });
+      break;
     default:
       res.writeHead(404);
-      res.write('Unknown');
+      return res.end('Unknown');
       break;
   }
-  fs.readFile(__dirname + '/' + filename,
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading ' + filename);
-    }   
-    res.writeHead(200);
-    res.end(data);
-  });
+  if (filename) {
+    fs.readFile(__dirname + '/' + filename,
+    function (err, data) {
+      if (err) {
+        res.writeHead(500);
+        res.end('Error loading ' + filename);
+      } else {
+        res.writeHead(200);
+        res.end(data);
+      }
+    });
+  }
 }
 
 try {

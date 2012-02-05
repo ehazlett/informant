@@ -34,6 +34,7 @@
     </div>
     <div class="container">
       <div class="content">
+        <div id="messages" class="hide"></div>
         <div class="row">
           <div class="welcome info">
             There are no events
@@ -51,18 +52,48 @@
     <div id="modalAddRepo" class="modal hide">
       <div class="modal-header">
         <a class="close" data-dismiss="modal">×</a>
-        <h3>Add Repository</h3>
+        <h3>Add Github Repository</h3>
       </div>
       <div class="modal-body">
-
+        <form id="formAddRepo" class="form-horizontal" method="post" action="/addrepo">
+          <fieldset>
+            <div class="control-group">
+              <label class="control-label" for="repoName">Repo name</label>
+              <div class="controls">
+                <input type="text" id="repoName" class="span2 required" name="repo_name" placeholder="Github repository name"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="owner">Owner</label>
+              <div class="controls">
+                <input type="text" id="repoOwner" class="span2 required" name="owner" placeholder="Repository owner"/>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="private">Private</label>
+              <div class="controls">
+                <label class="checkbox">Private Repository<input id="privateRepo" type="checkbox" name="private"/></label>
+                <div class="help-block">Use the Github Authorization link to setup access</div>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="options">Options</label>
+              <div class="controls">
+                <label class="checkbox">Pull-Requests<input type="checkbox" name="pull_requests"/></label>
+                <div class="help-block">Informant will monitor the repository for these changes</div>
+              </div>
+            </div>
+          </fieldset>
+        </form>
       </div>
       <div class="modal-footer">
-        <a href="#" class="btn btn-primary">Add</a>
+        <a href="#" id="btnAddRepo" class="btn btn-primary">Add</a>
         <a href="#" class="btn" data-dismiss="modal">Cancel</a>
       </div>
     </div>
   </body>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="/static/bootstrap-alert.js"></script>
   <script src="/static/bootstrap-modal.js"></script>
   <script src="/static/bootstrap-dropdown.js"></script>
   <script src="/static/bootstrap-tooltip.js"></script>
@@ -77,6 +108,44 @@
       if ('payload' in obj){ // ignore non-github messages for now
         var p = JSON.parse(obj.payload);
         createEvent(p.repository.name, p.ref + ' : ' + p.after + ' by ' + p.pusher.name, p.commits[0].message);
+      }
+    });
+    $("#btnAddRepo").click(function(){
+      // validate
+      if (validateForm("formAddRepo")) {
+        // check access if private repo
+        var privateRepo = $("#privateRepo").prop('checked');
+        if (privateRepo){
+          $.getJSON('/users/list', function(data){
+            var users = data;
+            var repoOwner = $("#repoOwner").val();
+            var found = false;
+            for (var u in users){
+              if (repoOwner == users[u]) {
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              alert('Informant cannot access '+repoOwner+'\'s private repositories.');
+              return false;
+            }
+          });
+        }
+        $.ajax({
+          type: 'POST',
+          url: '/addrepo',
+          data: $("#formAddRepo").serialize(),
+          success: function(data){
+            var d = JSON.parse(data);
+            if (d.status == 'success'){
+              flash('Repository added...');
+            } else {
+              flash('Error adding repository: ' + d.message);
+            }
+          }
+        });
+        $("#modalAddRepo").modal('hide');
       }
     });
     $(function(){
