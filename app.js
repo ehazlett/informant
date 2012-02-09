@@ -20,43 +20,83 @@ fs.readFile(__dirname + '/config.json',
       console.log("Unable to load config.json: " + err);
     } else {
       CONFIG = JSON.parse(data.toString());
-      if (CONFIG.hasOwnProperty('repos')){
-        setupGithubChecks();
-      }
     }
 });
 
-function setupGithubChecks(){
-  for (var i in CONFIG.repos) {
-    var repo = CONFIG.repos[i];
-    console.log('Setting up Github checks for ' + repo.name);
-    var interval = setInterval(function(){
-      var headers = null;
-      if (repo.hasOwnProperty('authUser')){
-        console.log('Using auth for ' + repo.name);
-        headers = {
-          'Authorization': 'Basic ' + new Buffer(repo.authUser + ':' + repo.authPass).toString('base64')
-        }
-      }
-      var req = https.request({
-        host: 'api.github.com',
-        port: 443,
-        path: '/repos/'+repo.owner+'/'+repo.name+'/pulls',
-        //path: '/users/'+repo.owner+'/repos',
-        method: 'GET',
-        headers: headers
-      }, function(res){
-        res.on('data', function(data){
-          console.log(data.toString());
-        });
-      }); 
-      req.end();
-      //console.log(req);
-    }, 5000);
-    INTERVALS[repo.name] = interval;
+// clears current periodic checks
+function clearExistingChecks(){
+  for (var i in INTERVALS) {
+    clearInterval(INTERVALS[i]);
   }
 }
 
+function checkGithubRepo(repoData, checkType, token){
+  switch (checkType) {
+    case "pull_requests":
+      var path = '/repos/'+repoData.owner+'/'+repoData.repo_name+'/pulls';
+      break;
+  }
+  if (token) {
+    path += '?access_token='+token;
+  }
+  var req = https.request({
+    host: 'api.github.com',
+    port: 443,
+    path: path,
+    method: 'GET'
+  }, function(res){
+    res.on('data', function(data){
+      //console.log('Data for ' + repoData.repo_name + ': ' + data.toString());
+      var pull = JSON.parse(data.toString());
+      // store in redis
+      var pullKey = 'pullrequests:' + repoData.repo_name;
+      for (var p in pull) {
+        redis.smembers(pullKey, function(err, r){
+          if (r.length == 0) {
+            // set in redis and broadcast
+            console.log('Notifying pull-request ' + pull[p].number + ' for ' + repoData.repo_name); 
+            var pullData = { 
+              'repo': repoData.repo_name,
+              'pull-request': pull[p]
+            }
+            io.sockets.emit('events', JSON.stringify(pullData));
+            redis.sadd(pullKey, pull[p].number, function(){});
+          } else {
+            // check for already notified pull request
+            //console.log('Notification already sent for pull-request ' + pull[p].number + ' on ' + repoData.repo_name);
+          }
+        });
+      }
+    });
+  }); 
+  req.end();
+}
+
+function setupGithubChecks(){
+  clearExistingChecks();
+  redis.keys('repos:*', function(err, res){
+    for (var k in res) {
+      redis.get(res[k], function(err, res){
+        var repo = JSON.parse(res);
+        console.log('Setting up Github checks for ' + repo.repo_name);
+        var interval = setInterval(function(){
+          if (repo.hasOwnProperty('private')){
+            redis.get('users:'+repo.owner+':token', function(err, r){
+              checkGithubRepo(repo, 'pull_requests', r);
+            });
+          } else {
+            checkGithubRepo(repo, 'pull_requests');
+          }
+        //}, Math.floor(5000 + (1+10000-5000)*Math.random()));
+        }, 3000);
+        INTERVALS[repo.repo_name] = interval;
+      });
+    }
+  });
+}
+
+setupGithubChecks();
+// start
 app.listen(APP_PORT);
 
 function handler (req, res) {
@@ -114,7 +154,7 @@ function route(req, parts, res){
           postData += chunk.toString();
         }).addListener('end', function() {
           var post = qs.parse(postData);
-          io.sockets.emit('events', post);
+          io.sockets.emit('events', JSON.stringify(post));
         });
       }   
       res.writeHead(200);
@@ -187,6 +227,8 @@ function route(req, parts, res){
           console.log(post);
           // add repo to datastore
           redis.set('repos:'+post.repo_name, JSON.stringify(post));
+          // setup checks
+          setupGithubChecks();
           res.writeHead(200);
         });
       }   

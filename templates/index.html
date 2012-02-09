@@ -102,50 +102,40 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io.connect();
-    socket.on('events', function (obj) {
-      //console.log(obj);
+    socket.on('events', function (data) {
+      var obj = JSON.parse(data);
       // check for github
-      if ('payload' in obj){ // ignore non-github messages for now
-        var p = JSON.parse(obj.payload);
+      if (obj.hasOwnProperty('payload')){ // ignore non-github messages for now
+        var p = JSON.parse(obj['payload']);
         createEvent(p.repository.name, p.ref + ' : ' + p.after + ' by ' + p.pusher.name, p.commits[0].message);
+      } else if (obj.hasOwnProperty('pull-request')){
+        var pr = obj['pull-request'];
+        createEvent(obj.repo + ' : ' + 'pull request', 'Pull request ' + pr.number + ' : ' + ' by ' + pr.user.login, '<a href="' + pr.html_url + '" target="_github">' + pr.html_url + '</a>');
       }
     });
+    function addGithubRepo(){
+      $.ajax({
+        type: 'POST',
+        url: '/addrepo',
+        data: $("#formAddRepo").serialize(),
+        success: function(data){
+          var d = JSON.parse(data);
+          if (d.status == 'success'){
+            flash('Repository added...');
+          } else {
+            flash('Error adding repository: ' + d.message);
+          }
+          $("#modalAddRepo").modal('hide');
+        }
+      });
+    }
     $("#btnAddRepo").click(function(){
       // validate
       if (validateForm("formAddRepo")) {
         // check access if private repo
         var privateRepo = $("#privateRepo").prop('checked');
-        if (privateRepo){
-          $.getJSON('/users/list', function(data){
-            var users = data;
-            var repoOwner = $("#repoOwner").val();
-            var found = false;
-            for (var u in users){
-              if (repoOwner == users[u]) {
-                found = true;
-                break;
-              }
-            }
-            if (!found) {
-              alert('Informant cannot access '+repoOwner+'\'s private repositories.');
-              return false;
-            }
-          });
-        }
-        $.ajax({
-          type: 'POST',
-          url: '/addrepo',
-          data: $("#formAddRepo").serialize(),
-          success: function(data){
-            var d = JSON.parse(data);
-            if (d.status == 'success'){
-              flash('Repository added...');
-            } else {
-              flash('Error adding repository: ' + d.message);
-            }
-          }
-        });
-        $("#modalAddRepo").modal('hide');
+        var errors = false;
+        addGithubRepo();
       }
     });
     $(function(){
