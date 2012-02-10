@@ -74,6 +74,8 @@
               <div class="controls">
                 <label class="checkbox">Private Repository<input id="privateRepo" type="checkbox" name="private"/></label>
                 <div class="help-block">Use the Github Authorization link to setup access</div>
+                <input id="privateAccount" type="text" name="private_account" disabled="true" placeholder="Github Account"/>
+                <div class="help-block">Authorized account used to access repository information</div>
               </div>
             </div>
             <div class="control-group">
@@ -136,6 +138,13 @@
         var privateRepo = $("#privateRepo").prop('checked');
         var errors = false;
         addGithubRepo();
+      }
+    });
+    $("#privateRepo").click(function(){
+      if ($("#privateRepo").prop('checked')) {
+        $("#privateAccount").prop('disabled', false);
+      } else {
+        $("#privateAccount").prop('disabled', true);
       }
     });
     $(function(){

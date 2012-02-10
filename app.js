@@ -36,40 +36,48 @@ function checkGithubRepo(repoData, checkType, token){
       var path = '/repos/'+repoData.owner+'/'+repoData.repo_name+'/pulls';
       break;
   }
-  if (token) {
+  if (token != null) {
     path += '?access_token='+token;
   }
-  var req = https.request({
-    host: 'api.github.com',
-    port: 443,
-    path: path,
-    method: 'GET'
-  }, function(res){
-    res.on('data', function(data){
-      //console.log('Data for ' + repoData.repo_name + ': ' + data.toString());
-      var pull = JSON.parse(data.toString());
-      // store in redis
-      var pullKey = 'pullrequests:' + repoData.repo_name;
-      for (var p in pull) {
-        redis.smembers(pullKey, function(err, r){
-          if (r.length == 0) {
-            // set in redis and broadcast
-            console.log('Notifying pull-request ' + pull[p].number + ' for ' + repoData.repo_name); 
-            var pullData = { 
-              'repo': repoData.repo_name,
-              'pull-request': pull[p]
-            }
-            io.sockets.emit('events', JSON.stringify(pullData));
-            redis.sadd(pullKey, pull[p].number, function(){});
-          } else {
-            // check for already notified pull request
-            //console.log('Notification already sent for pull-request ' + pull[p].number + ' on ' + repoData.repo_name);
+  try {
+    var req = https.request({
+      host: 'api.github.com',
+      port: 443,
+      path: path,
+      method: 'GET'
+    }, function(res){
+      res.on('data', function(data){
+        //console.log('Data for ' + repoData.repo_name + ': ' + data.toString());
+        try {
+          var pull = JSON.parse(data.toString());
+          // store in redis
+          var pullKey = 'pullrequests:' + repoData.repo_name;
+          for (var p in pull) {
+            redis.smembers(pullKey, function(err, r){
+              if (r.length == 0) {
+                // set in redis and broadcast
+                console.log('Notifying pull-request ' + pull[p].number + ' for ' + repoData.repo_name); 
+                var pullData = { 
+                  'repo': repoData.repo_name,
+                  'pull-request': pull[p]
+                }
+                io.sockets.emit('events', JSON.stringify(pullData));
+                redis.sadd(pullKey, pull[p].number, function(){});
+              } else {
+                // check for already notified pull request
+                //console.log('Notification already sent for pull-request ' + pull[p].number + ' on ' + repoData.repo_name);
+              }
+            });
           }
-        });
-      }
-    });
-  }); 
-  req.end();
+        } catch(err) {
+          console.log(err);
+        }
+      });
+    }); 
+    req.end();
+  } catch(err) {
+    console.log(err);
+  }
 }
 
 function setupGithubChecks(){
@@ -81,14 +89,15 @@ function setupGithubChecks(){
         console.log('Setting up Github checks for ' + repo.repo_name);
         var interval = setInterval(function(){
           if (repo.hasOwnProperty('private')){
-            redis.get('users:'+repo.owner+':token', function(err, r){
-              checkGithubRepo(repo, 'pull_requests', r);
+            var account = repo.private_account;
+            redis.get('users:'+repo.private_account+':token', function(err, r){
+              checkGithubRepo(repo, 'pull_requests', r.toString());
             });
           } else {
             checkGithubRepo(repo, 'pull_requests');
           }
-        //}, Math.floor(5000 + (1+10000-5000)*Math.random()));
-        }, 3000);
+        }, Math.floor(5000 + (1+10000-5000)*Math.random()));
+        //}, 3000);
         INTERVALS[repo.repo_name] = interval;
       });
     }
