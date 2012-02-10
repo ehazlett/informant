@@ -119,7 +119,7 @@
         var pr = obj['pull-request'];
         createEvent(obj.repo + ' : ' + 'pull request', 'Pull request ' + pr.number + ' : ' + ' by ' + pr.user.login, '<a href="' + pr.html_url + '" target="_github">' + pr.html_url + '</a>');
         if (webkitNotifications) {
-          showNotification('Pull request ' + pr.number + ' on ', pr.user.login + ' : ' + '<a href="' + p.html_url + '" target="_github">' + pr.html_url + '</a>');
+          showNotification('Pull request #' + pr.number + ' for ' + obj.repo, pr.title + ' (' + pr.user.login + ')');
         }
       }
     });

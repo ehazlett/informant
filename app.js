@@ -3,7 +3,7 @@ var https = require('https');
 var url = require('url');
 var qs = require('querystring');
 var rds = require('redis');
-var redis = rds.createClient(6380);
+var redis = rds.createClient();
 var APP_PORT = 3000;
 
 var app = require('http').createServer(handler)
