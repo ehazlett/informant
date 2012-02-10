@@ -3,7 +3,7 @@ var https = require('https');
 var url = require('url');
 var qs = require('querystring');
 var rds = require('redis');
-var redis = rds.createClient();
+var redis = rds.createClient(6380);
 var APP_PORT = 3000;
 
 var app = require('http').createServer(handler)
@@ -123,6 +123,9 @@ function route(req, parts, res){
     case '/static/favicon.ico':
       filename = 'static/favicon.ico';
       break;
+    case '/static/info_32.png':
+      filename = 'static/info_32.png';
+      break;
     case '/static/glyphicons-halflings.png':
       filename = 'static/glyphicons-halflings.png';
       break;
@@ -134,6 +137,9 @@ function route(req, parts, res){
       break;
     case '/static/common.js':
       filename = 'static/common.js';
+      break;
+    case '/static/notifications.js':
+      filename = 'static/notifications.js';
       break;
     case '/static/bootstrap-alert.js':
       filename = 'static/bootstrap-alert.js';

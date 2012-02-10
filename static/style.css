@@ -46,7 +46,16 @@ footer a:hover {
   color: #7e7e7e;
   text-decoration: none;
 }
-
+@media (max-width: 480px) {
+  body {
+    padding: 0px;
+  }
+}
+@media (max-width: 768px) {
+  body {
+    padding: 0px;
+  }
+}
 @media (min-width: 980px) {
   div.content {
     margin-top: 45px;

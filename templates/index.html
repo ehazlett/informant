@@ -25,6 +25,7 @@
                 <ul class="dropdown-menu">
                   <li><a href="/oauth/grant" id="btnGithubAuth">Github Authorization</a></li>
                   <li><a href="#modalAddRepo" data-toggle="modal">Add Repository</a></li>
+                  <li id="enable-notifications" class="hide"><a href="#" id="btn-enable-notifications">Enable Notifications</a></li>
                 </ul>
               </li>
             </ul>
@@ -101,6 +102,7 @@
   <script src="/static/bootstrap-tooltip.js"></script>
   <script src="/static/bootstrap-popover.js"></script>
   <script src="/static/common.js"></script>
+  <script src="/static/notifications.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io.connect();
@@ -110,9 +112,15 @@
       if (obj.hasOwnProperty('payload')){ // ignore non-github messages for now
         var p = JSON.parse(obj['payload']);
         createEvent(p.repository.name, p.ref + ' : ' + p.after + ' by ' + p.pusher.name, p.commits[0].message);
+        if (webkitNotifications) {
+          showNotification('Push to ' + p.repository.name, p.pusher.name + ' : ' + p.commits[0].message);
+        }
       } else if (obj.hasOwnProperty('pull-request')){
         var pr = obj['pull-request'];
         createEvent(obj.repo + ' : ' + 'pull request', 'Pull request ' + pr.number + ' : ' + ' by ' + pr.user.login, '<a href="' + pr.html_url + '" target="_github">' + pr.html_url + '</a>');
+        if (webkitNotifications) {
+          showNotification('Pull request ' + pr.number + ' on ', pr.user.login + ' : ' + '<a href="' + p.html_url + '" target="_github">' + pr.html_url + '</a>');
+        }
       }
     });
     function addGithubRepo(){
@@ -147,7 +155,18 @@
         $("#privateAccount").prop('disabled', true);
       }
     });
+    $("#btn-enable-notifications").click(function(){
+      if (webkitNotifications) {
+        webkitNotifications.requestPermission(function(){});
+      }
+    });
     $(function(){
+      // notification support
+      if (webkitNotifications) {
+        if (webkitNotifications.checkPermission() != 0) {
+          $("#enable-notifications").removeClass('hide');
+        }
+      }
       $("#btnGithubAuth").tooltip({
         title: "Gives Informant access to your Github private repository information (pull request, etc.)",
         placement: "bottom",
