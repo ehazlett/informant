@@ -5,10 +5,11 @@ Informant is a Node.js application that displays realtime notifications (using s
 Setup
 ------
 * Install Node.js
+* Install Redis (informant is configured to connect to a Redis instance on localhost:6379 by default)
 * Clone Informant
-* `npm install socket.io`
+* `npm install socket.io redis`
 * Run node app on a public url `node app.js`
-* Configure a Github Post-Receive hook (http://help.github.com/post-receive-hooks/) to `http://<url>/receive`
+* Configure a Github Post-Receive hook (http://help.github.com/post-receive-hooks/) to `http://<your-public-informant-url>/receive`
 
 Notifications
 -------------
