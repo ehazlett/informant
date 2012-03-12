@@ -1,0 +1,14 @@
+{
+  "name": "informant",
+  "version": "0.1.0",
+  "author": "Evan Hazlett <ejhazlett@gmail.com>",
+  "description": "Github notification application",
+  "dependencies" : {
+    "redis"     :  "0.7.x",
+    "socket.io" :  "0.9.x"
+  },
+  "license": "MIT",
+  "engine": {
+    "node": ">=0.6"
+  }
+}
